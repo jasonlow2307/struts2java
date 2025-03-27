@@ -1,7 +1,14 @@
 package com.deloitte.struts2java.controller;
 
 import com.deloitte.struts2java.entity.Item;
+import com.deloitte.struts2java.repository.ItemRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,54 +17,64 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/prices")
+@Tag(name = "Price Summary", description = "API for calculating price summaries based on selected items")
 public class PriceSummaryController {
 
     private static final Logger logger = LoggerFactory.getLogger(PriceSummaryController.class);
+    private final ItemRepository itemRepository;
 
+    public PriceSummaryController(ItemRepository itemRepository) {
+        this.itemRepository = itemRepository;
+    }
+
+    @Operation(summary = "Calculate price summary",
+            description = "Processes selected item IDs and quantities and calculates the total price using database values.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully calculated price summary"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "500", description = "Error occurred during price calculation")
+    })
     @PostMapping("/summary")
-    public String processPriceSummary(
+    public ResponseEntity<?> processPriceSummary(
+            @Parameter(description = "Array of selected item IDs")
             @RequestParam(value = "itemId", required = false) String[] itemIds,
+
+            @Parameter(description = "Array of quantities for each selected item")
             @RequestParam(value = "quantity", required = false) String[] quantities,
-            @RequestParam(value = "price", required = false) String[] prices,
-            @RequestParam(value = "name", required = false) String[] names,
+
             HttpSession session) {
 
         logger.info("Processing price summary");
-        logger.debug("ItemIds: {}", Arrays.toString(itemIds));
-        logger.debug("Quantities: {}", Arrays.toString(quantities));
-        logger.debug("Prices: {}", Arrays.toString(prices));
-        logger.debug("Names: {}", Arrays.toString(names));
+
+        if (itemIds == null || quantities == null || itemIds.length != quantities.length) {
+            return ResponseEntity.badRequest().body("Invalid input data");
+        }
+
+        BigDecimal totalPrice = BigDecimal.ZERO;
+        Map<String, Integer> cartItems = new HashMap<>();
 
         try {
-            // Validate input
-            if (itemIds == null || quantities == null || prices == null || names == null
-                    || itemIds.length != quantities.length || itemIds.length != prices.length) {
-                return "error";
-            }
-
-            BigDecimal totalPrice = BigDecimal.ZERO;
-            Map<Item, Integer> cartItems = new HashMap<>();
-
             for (int i = 0; i < itemIds.length; i++) {
                 int itemId = Integer.parseInt(itemIds[i]);
                 int quantity = Integer.parseInt(quantities[i]);
-                BigDecimal price = new BigDecimal(prices[i]);
-                String name = names[i];
 
-                if (quantity > 0) {
-                    Item item = new Item();
-                    item.setId(itemId);
-                    item.setName(name);
-                    item.setPrice(price);
+                Optional<Item> optionalItem = itemRepository.findById(itemId);
+
+                if (optionalItem.isPresent() && quantity > 0) {
+                    Item item = optionalItem.get();
+                    BigDecimal price = item.getPrice();
+                    String name = item.getName();
 
                     totalPrice = totalPrice.add(price.multiply(BigDecimal.valueOf(quantity)));
-                    cartItems.put(item, quantity);
+                    cartItems.put(name, quantity);
+                } else {
+                    logger.warn("Item with ID {} not found or invalid quantity", itemId);
                 }
             }
 
@@ -67,11 +84,14 @@ public class PriceSummaryController {
             logger.info("Total price: {}", totalPrice);
             logger.debug("Cart items: {}", cartItems);
 
-            return "price/summary";
+            return ResponseEntity.ok().body(Map.of(
+                    "totalPrice", totalPrice,
+                    "cartItems", cartItems
+            ));
 
         } catch (Exception e) {
             logger.error("Error processing price summary", e);
-            return "error";
+            return ResponseEntity.badRequest().body("Error processing price summary: " + e.getMessage());
         }
     }
 }

@@ -23,8 +23,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         System.out.println(":::::::::INTERCEPTOR::::::::::loggedInUser = " + loggedInUser);
 
         if (loggedInUser == null) {
-            System.out.println("User not logged in. Redirecting to login page.");
-            response.sendRedirect("/login");
+            System.out.println("User not logged in.");
             return false;
         }
 
