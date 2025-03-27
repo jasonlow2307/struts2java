@@ -1,4 +1,4 @@
-package com.deloitte.controller;
+package com.deloitte.struts2java.controller;
 
 import com.project.model.Item;
 import org.springframework.stereotype.Controller;

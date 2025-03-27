@@ -1,4 +1,4 @@
-package com.project.controller;
+package com.deloitte.struts2java.controller;
 
 import com.project.service.ItemService;
 import com.project.model.Item;
