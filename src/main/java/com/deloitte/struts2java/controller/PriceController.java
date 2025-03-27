@@ -1,7 +1,7 @@
 package com.deloitte.struts2java.controller;
 
-import com.project.service.ItemService;
-import com.project.model.Item;
+import com.deloitte.struts2java.entity.Item;
+import com.deloitte.struts2java.service.ItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
