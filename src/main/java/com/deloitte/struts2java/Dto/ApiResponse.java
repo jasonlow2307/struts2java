@@ -1,4 +1,4 @@
-package com.deloitte.struts2java.Dto;
+package com.deloitte.struts2java.dto;
 
 public class ApiResponse<T> {
     private boolean success;

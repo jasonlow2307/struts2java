@@ -1,4 +1,4 @@
-package com.deloitte.struts2java.Dto;
+package com.deloitte.struts2java.dto;
 
 import java.math.BigDecimal;
 

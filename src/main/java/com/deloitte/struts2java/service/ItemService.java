@@ -1,9 +1,8 @@
 package com.deloitte.struts2java.service;
 
 import java.util.List;
-import java.util.Optional;
 
-import com.deloitte.struts2java.Dto.ItemDTO;
+import com.deloitte.struts2java.dto.ItemDTO;
 import com.deloitte.struts2java.model.Item;
 import com.deloitte.struts2java.repository.ItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
