@@ -3,6 +3,7 @@ package com.deloitte.struts2java;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+//initial commit
 @SpringBootApplication
 public class Struts2javaApplication {
 
