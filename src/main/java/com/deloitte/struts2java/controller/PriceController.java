@@ -13,8 +13,16 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController 
-@RequestMapping("/prices") 
+@RequestMapping("/api/prices")
+@Tag(name = "Price Management", description = "APIs for retrieving and managing prices")
 public class PriceController {
 
     private static final Logger logger = LoggerFactory.getLogger(PriceController.class);
@@ -27,6 +35,14 @@ public class PriceController {
     }
 
     @GetMapping
+    @Operation(summary = "Get all items with prices", description = "Retrieves a list of all items with their current prices")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved price list",
+                    content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = Item.class))),
+        @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content)
+    })
     public ResponseEntity<List<Item>> listPrices() {
         logger.info("PriceController listPrices method called");
         
