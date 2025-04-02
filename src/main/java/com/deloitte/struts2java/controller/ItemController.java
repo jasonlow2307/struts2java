@@ -2,8 +2,11 @@ package com.deloitte.struts2java.controller;
 
 import java.util.List;
 
+import com.deloitte.struts2java.Dto.ApiResponse;
+import com.deloitte.struts2java.Dto.ItemDTO;
 import com.deloitte.struts2java.model.Item;
 import com.deloitte.struts2java.service.ItemService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,9 +19,16 @@ import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 
-@Controller
-@RequestMapping("/items")
-@SessionAttributes("selectedItem")
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+
+@RestController
+@RequestMapping("/api/items")
 public class ItemController {
 
     private final ItemService itemService;
@@ -28,88 +38,86 @@ public class ItemController {
         this.itemService = itemService;
     }
 
-    @ModelAttribute("selectedItem")
-    public Item selectedItem() {
-        return new Item();
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<Item>>> getAllItems() {
+        List<Item> items = itemService.getAllItems();
+        return ResponseEntity.ok(ApiResponse.success(items));
     }
 
-    @GetMapping("/list")
-    public String listItems(Model model) {
-        try {
-            List<Item> items = itemService.getAllItems();
-            model.addAttribute("items", items);
-            return "item/itemListing";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "redirect";
-        }
-    }
-
-    @GetMapping("/view/{id}")
-    public String viewItem(@PathVariable("id") int itemId, Model model) {
-        Item item = itemService.getItemById(itemId);
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<Item>> getItemById(@PathVariable int id) {
+        Item item = itemService.getItemById(id);
         if (item == null) {
-            return "redirect";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("Item not found with id: " + id));
         }
-
-        model.addAttribute("item", item);
-        model.addAttribute("selectedItem", item);
-        return "item/itemDetails";
+        return ResponseEntity.ok(ApiResponse.success(item));
     }
 
     @GetMapping("/create")
-    public String showCreateForm(Model model) {
-        model.addAttribute("item", new Item());
-        return "item/createItem";
+    public ResponseEntity<ApiResponse<String>> showCreateForm() {
+        // This endpoint simulates forwarding to a create form in the original Struts implementation
+        return ResponseEntity.ok(ApiResponse.success("Ready to create item", null));
     }
 
-    @PostMapping("/create")
-    public String createItem(@ModelAttribute Item item, Model model, RedirectAttributes redirectAttributes) {
+    @PostMapping
+    public ResponseEntity<ApiResponse<Item>> createItem(
+            @RequestBody ItemDTO itemDTO,
+            HttpSession session) {
         try {
-            itemService.createItem(item);
-            model.addAttribute("item", item);
-            model.addAttribute("selectedItem", item);
-            return "item/itemDetails";
+            System.out.println("Creating item: " + itemDTO.getName());
+
+            // Only include name, description, and price as in the original implementation
+            Item createdItem = itemService.createItem(itemDTO);
+
+            // Store in session as the original implementation did
+            session.setAttribute("selectedItem", createdItem);
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.success("Item created successfully", createdItem));
         } catch (Exception e) {
+            System.out.println("Error creating item: " + e.getMessage());
             e.printStackTrace();
-            return "redirect";
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to create item: " + e.getMessage()));
         }
     }
 
-    @GetMapping("/edit/{id}")
-    public String showEditForm(@PathVariable("id") int itemId, Model model) {
-        Item item = itemService.getItemById(itemId);
-        if (item == null) {
-            return "redirect";
-        }
-
-        model.addAttribute("item", item);
-        return "item/editItem";
-    }
-
-    @PostMapping("/update")
-    public String updateItem(@ModelAttribute Item item, Model model) {
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<Item>> updateItem(@PathVariable int id, @RequestBody Item item) {
         try {
-            itemService.updateItem(item);
-            model.addAttribute("item", item);
-            model.addAttribute("selectedItem", item);
-            return "item/itemDetails";
+            Item existingItem = itemService.getItemById(id);
+
+            if (existingItem == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.error("Item not found with id: " + id));
+            }
+
+            // Set ID to ensure we're updating the correct record
+            item.setId(id);
+            Item updatedItem = itemService.updateItem(item);
+
+            return ResponseEntity.ok(ApiResponse.success("Item updated successfully", updatedItem));
         } catch (Exception e) {
-            e.printStackTrace();
-            return "redirect";
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to update item: " + e.getMessage()));
         }
     }
 
-    @GetMapping("/delete/{id}")
-    public String deleteItem(@PathVariable("id") int itemId, Model model) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteItem(@PathVariable int id) {
         try {
-            itemService.deleteItemById(itemId);
-            List<Item> items = itemService.getAllItems();
-            model.addAttribute("items", items);
-            return "item/itemListing";
+            boolean deleted = itemService.deleteItemById(id);
+
+            if (!deleted) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.error("Item not found with id: " + id));
+            }
+
+            return ResponseEntity.ok(ApiResponse.success("Item deleted successfully", null));
         } catch (Exception e) {
-            e.printStackTrace();
-            return "redirect";
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to delete item: " + e.getMessage()));
         }
     }
 }

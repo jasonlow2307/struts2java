@@ -3,6 +3,7 @@ package com.deloitte.struts2java.service;
 import java.util.List;
 import java.util.Optional;
 
+import com.deloitte.struts2java.Dto.ItemDTO;
 import com.deloitte.struts2java.model.Item;
 import com.deloitte.struts2java.repository.ItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,13 +23,20 @@ public class ItemService {
     }
 
     @Transactional
-    public void createItem(Item item) {
-        itemRepository.save(item);
+    public Item createItem(ItemDTO itemDTO) {
+        // Create a new item with only the fields provided in the original implementation
+        Item item = new Item();
+        item.setName(itemDTO.getName());
+        item.setDescription(itemDTO.getDescription());
+        item.setPrice(itemDTO.getPrice());
+        // Other fields are left at their default values
+
+        return itemRepository.save(item);
     }
 
     @Transactional
-    public void updateItem(Item item) {
-        itemRepository.save(item);
+    public Item updateItem(Item item) {
+        return itemRepository.save(item);
     }
 
     public List<Item> getAllItems() {
@@ -36,17 +44,15 @@ public class ItemService {
     }
 
     public Item getItemById(int itemId) {
-        Optional<Item> itemOptional = itemRepository.findById(itemId);
-        return itemOptional.orElse(null);
+        return itemRepository.findById(itemId).orElse(null);
     }
 
     @Transactional
-    public void deleteItemById(int itemId) {
+    public boolean deleteItemById(int itemId) {
         if (itemRepository.existsById(itemId)) {
             itemRepository.deleteById(itemId);
-            System.out.println("Item deleted successfully!");
-        } else {
-            System.out.println("Item not found!");
+            return true;
         }
+        return false;
     }
 }
