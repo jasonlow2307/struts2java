@@ -11,18 +11,18 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        // For simplicity, we're disabling CSRF and allowing all requests
-        // In a real application, proper authentication would be implemented
-        http.csrf().disable()
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            // Authorize all requests
             .authorizeRequests()
-            .antMatchers("/api/**").permitAll()
-            .antMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-            .antMatchers("/h2-console/**").permitAll()
-            .anyRequest().authenticated();
-        
-        // Allow frames for H2 console
-        http.headers().frameOptions().sameOrigin();
+                .antMatchers("/**").permitAll()
+                .and()
+            // Disable form login
+            .formLogin().disable()
+            // Disable HTTP Basic
+            .httpBasic().disable()
+            // Disable CSRF - this will fix the 403 error
+            .csrf().disable();
         
         return http.build();
     }

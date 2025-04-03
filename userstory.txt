@@ -1,31 +1,30 @@
-### Price Management
-
-**User Story #8**
-As a user, I want to access a price listing so that I can set quantities for price calculation.
+**User Story #1** As a user, I want to log in to the system so that I can access the protected functionality.
 
 **Acceptance Criteria:**
 
-- The system displays a table with all items showing ID, name, description, price, and quantity input
-- The system provides a quantity field for each item with a minimum value of 0
-- The system includes a "Calculate" button to process selected quantities
-- The system includes a link to return to the main menu
-
----
-
-**User Story #9**
-As a user, I want to calculate prices based on selected items and quantities so that I can see total costs.
-
-**Acceptance Criteria:**
-
-- The system calculates subtotals for each selected item (price × quantity)
-- The system calculates the total price of all selected items
-- The system displays a summary table with item name, price, quantity, and subtotal
-- The system displays the total price at the bottom of the summary
-- The system displays "No items selected" message if no items were selected
-- The system includes a link to return to the price listing page
+- The system displays a login form with username and password fields
+- The system validates credentials against stored values in login.properties
+- The system redirects to menu page upon successful login
+- The system displays an error message for invalid credentials
+- The system maintains the user session after successful login
 
 **Business Rules:**
 
-- Only items with quantity greater than 0 are included in calculations
-- Subtotal = item price × quantity
-- Total price = sum of all subtotals
+- Login credentials are stored in login.properties file
+
+**Input Model:**
+
+| Field Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| username | String | Yes | User's login name |
+| password | String | Yes | User's password |
+
+---
+
+**User Story #2** As a user, I want to log out of the system so that I can securely end my session.
+
+**Acceptance Criteria:**
+
+- The system provides a logout button on all pages
+- The system invalidates the user session upon logout
+- The system redirects to the login page after logout
